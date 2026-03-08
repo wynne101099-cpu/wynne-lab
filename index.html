@@ -2,10 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 核心：适配所有手机/电脑屏幕，禁用缩放 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- 解决跨域问题 -->
+    <meta http-equiv="Access-Control-Allow-Origin" content="*" />
+    <!-- 强制HTTPS加载，避免协议不兼容 -->
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
     <title>Wynne's Ink Lab</title>
-    <script type="module" crossorigin src="/wynne-lab/assets/index-DKC5l-gS.js"></script>
-    <link rel="stylesheet" crossorigin href="/wynne-lab/assets/index-CzizT7dk.css">
+    
+    <!-- 原有JS/CSS保留，补全跨域标识 -->
+    <script type="module" crossorigin="anonymous" src="/wynne-lab/assets/index-DKC5l-gS.js"></script>
+    <link rel="stylesheet" crossorigin="anonymous" href="/wynne-lab/assets/index-CzizT7dk.css">
   
     <script data-id="dev-inject-monitor">
       (function() {
@@ -20,60 +27,130 @@
         }
       })();
     </script>
+
+    <!-- 全端适配样式：强制图片显示，适配所有屏幕 -->
     <style>
-      .work-images { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 10px 0; }
-      .work-img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; }
-      .about-avatar { width: 200px; height: 200px; border-radius: 50%; object-fit: cover; }
+      /* 全局重置，消除默认样式干扰 */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { 
+        padding: 15px; 
+        font-family: sans-serif; 
+        /* 防止页面空白导致图片加载异常 */
+        min-height: 100vh; 
+      }
+      /* 核心：强制所有图片显示，适配屏幕宽度 */
+      img {
+        max-width: 100% !important;  /* 不超出屏幕/容器 */
+        height: auto !important;     /* 保持宽高比 */
+        display: block !important;   /* 消除行内间隙 */
+        visibility: visible !important; /* 强制可见 */
+        opacity: 1 !important;       /* 强制不透明 */
+        border: none !important;     /* 消除边框干扰 */
+        /* 加载占位，避免空白 */
+        background: #f8f8f8;
+        min-height: 60px;
+        margin: 5px 0;
+      }
+      /* 作品图片网格：电脑/手机自动适配列数 */
+      .work-images {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 8px;
+        margin: 15px 0;
+      }
+      /* 头像适配：电脑大，手机小 */
+      .about-avatar {
+        width: clamp(120px, 20vw, 200px); /* 自适应宽度 */
+        height: clamp(120px, 20vw, 200px);
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 20px;
+      }
+      /* 解决图片加载失败的兜底样式 */
+      img::before {
+        content: "图片加载中...";
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: #666;
+        font-size: 12px;
+      }
     </style>
   </head>
   <body>
     <div id="root"></div>
 
-    <!-- 精准匹配：只替换对应图片，不交叉覆盖 -->
+    <!-- 终极图片加载脚本：重试机制+精准匹配+全端兼容 -->
     <script>
-      window.onload = function() {
-        // 1. About头像：仅匹配包含avatar的图片（严格匹配，不与其他图片冲突）
-        const avatarImg = document.querySelector('img[src$="avatar.jpg"], .about-avatar');
-        if (avatarImg) {
-          avatarImg.src = 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/avatar.jpg';
+      // 定义所有图片的正确地址（核心：用GitHub Pages地址替代Raw地址，兼容性更好）
+      const imgMap = {
+        // 头像
+        avatar: "https://wynne101099-cpu.github.io/wynne-lab/avatar.jpg",
+        // 项目一
+        cover1: "https://wynne101099-cpu.github.io/wynne-lab/covers/cover1.jpg",
+        cover2: "https://wynne101099-cpu.github.io/wynne-lab/covers/cover2.jpg",
+        cover3: "https://wynne101099-cpu.github.io/wynne-lab/covers/cover3.jpg",
+        cover4: "https://wynne101099-cpu.github.io/wynne-lab/covers/cover4.jpg",
+        cover5: "https://wynne101099-cpu.github.io/wynne-lab/covers/cover5.jpg",
+        // 项目二
+        ai: "https://wynne101099-cpu.github.io/wynne-lab/wechat_covers/ai.jpg",
+        digital: "https://wynne101099-cpu.github.io/wynne-lab/wechat_covers/digital.jpg",
+        industry: "https://wynne101099-cpu.github.io/wynne-lab/wechat_covers/industry.jpg",
+        info: "https://wynne101099-cpu.github.io/wynne-lab/wechat_covers/info.jpg",
+        report: "https://wynne101099-cpu.github.io/wynne-lab/wechat_covers/report.jpg",
+        // 项目三/四
+        work3: "https://wynne101099-cpu.github.io/wynne-lab/work3.jpg",
+        work4: "https://wynne101099-cpu.github.io/wynne-lab/work4.jpg"
+      };
+
+      // 图片加载重试函数（解决网络波动问题）
+      function loadImageWithRetry(img, url, retryTimes = 3) {
+        img.src = url;
+        img.onerror = function() {
+          if (retryTimes > 0) {
+            setTimeout(() => loadImageWithRetry(img, url, retryTimes - 1), 500);
+          } else {
+            console.log("图片加载失败：", url);
+          }
+        };
+      }
+
+      // 页面完全渲染后执行，确保所有图片元素已存在
+      setTimeout(function() {
+        // 1. 匹配并替换头像
+        const avatarImg = document.querySelector('img[src*="avatar"], .about-avatar');
+        if (avatarImg) loadImageWithRetry(avatarImg, imgMap.avatar);
+
+        // 2. 匹配并替换项目一（cover1-cover5）
+        for (let i = 1; i <= 5; i++) {
+          const coverImg = document.querySelectorAll(`img[src*="cover${i}"], img[alt*="项目一图片${i}"]`);
+          coverImg.forEach(img => loadImageWithRetry(img, imgMap[`cover${i}`]));
         }
 
-        // 2. 项目一：仅匹配covers/cover1-cover5（严格路径匹配）
-        const coverPaths = [
-          { key: 'covers/cover1.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover1.jpg' },
-          { key: 'covers/cover2.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover2.jpg' },
-          { key: 'covers/cover3.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover3.jpg' },
-          { key: 'covers/cover4.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover4.jpg' },
-          { key: 'covers/cover5.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover5.jpg' }
-        ];
-        coverPaths.forEach(item => {
-          const imgs = document.querySelectorAll(`img[src*="${item.key}"], img[alt="项目一图片${item.key.slice(-5, -4)}"]`);
-          imgs.forEach(img => img.src = item.url);
+        // 3. 匹配并替换项目二（ai/digital/industry/info/report）
+        const wechatKeys = ["ai", "digital", "industry", "info", "report"];
+        wechatKeys.forEach(key => {
+          const wechatImg = document.querySelectorAll(`img[src*="${key}"], img[alt*="${key}"], img[alt*="项目二图片${wechatKeys.indexOf(key)+1}"]`);
+          wechatImg.forEach(img => loadImageWithRetry(img, imgMap[key]));
         });
 
-        // 3. 项目二：仅匹配wechat_covers下的图片（严格路径匹配）
-        const wechatPaths = [
-          { key: 'wechat_covers/ai.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/ai.jpg' },
-          { key: 'wechat_covers/digital.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/digital.jpg' },
-          { key: 'wechat_covers/industry.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/industry.jpg' },
-          { key: 'wechat_covers/info.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/info.jpg' },
-          { key: 'wechat_covers/report.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/report.jpg' }
-        ];
-        wechatPaths.forEach(item => {
-          const imgs = document.querySelectorAll(`img[src*="${item.key}"], img[alt="项目二图片${item.key.slice(-5, -4)}"]`);
-          imgs.forEach(img => img.src = item.url);
+        // 4. 匹配并替换项目三/四（work3/work4）
+        const workKeys = ["work3", "work4"];
+        workKeys.forEach(key => {
+          const workImg = document.querySelectorAll(`img[src*="${key}"], img[alt*="${key}"], img[alt*="项目${key === 'work3' ? '三' : '四'}图片"]`);
+          workImg.forEach(img => loadImageWithRetry(img, imgMap[key]));
         });
 
-        // 4. 项目三/四：仅匹配work3/work4（严格后缀匹配）
-        const workPaths = [
-          { key: 'work3.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/work3.jpg' },
-          { key: 'work4.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/work4.jpg' }
-        ];
-        workPaths.forEach(item => {
-          const imgs = document.querySelectorAll(`img[src$="${item.key}"], img[alt="项目三图片"], img[alt="项目四图片"]`);
-          imgs.forEach(img => img.src = item.url);
+        // 兜底：强制显示所有未加载的图片
+        document.querySelectorAll('img').forEach(img => {
+          if (!img.src || img.src.includes('blob:') || img.src.includes('undefined')) {
+            const imgName = img.src.split('/').pop() || img.alt.split(' ').pop();
+            if (imgMap[imgName]) loadImageWithRetry(img, imgMap[imgName]);
+          }
         });
-      };
+      }, 1000); // 延迟1秒执行，确保React渲染完成
     </script>
   </body>
 </html>
