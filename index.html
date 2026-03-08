@@ -20,7 +20,6 @@
         }
       })();
     </script>
-    <!-- 基础样式：保证图片排版美观 -->
     <style>
       .work-images { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 10px 0; }
       .work-img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; }
@@ -30,49 +29,49 @@
   <body>
     <div id="root"></div>
 
-    <!-- 自动替换所有图片为正确地址 -->
+    <!-- 精准匹配：只替换对应图片，不交叉覆盖 -->
     <script>
       window.onload = function() {
-        // 1. About区域头像
-        const avatarImg = document.querySelector('img[src*="avatar"], img[alt*="头像"], .about-avatar');
+        // 1. About头像：仅匹配包含avatar的图片（严格匹配，不与其他图片冲突）
+        const avatarImg = document.querySelector('img[src$="avatar.jpg"], .about-avatar');
         if (avatarImg) {
           avatarImg.src = 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/avatar.jpg';
         }
 
-        // 2. 项目一：cover1-cover5
-        const coverImgs = {
-          cover1: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover1.jpg',
-          cover2: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover2.jpg',
-          cover3: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover3.jpg',
-          cover4: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover4.jpg',
-          cover5: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover5.jpg'
-        };
-        Object.keys(coverImgs).forEach(key => {
-          const imgs = document.querySelectorAll(`img[src*="${key}"], img[alt*="${key}"]`);
-          imgs.forEach(img => img.src = coverImgs[key]);
+        // 2. 项目一：仅匹配covers/cover1-cover5（严格路径匹配）
+        const coverPaths = [
+          { key: 'covers/cover1.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover1.jpg' },
+          { key: 'covers/cover2.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover2.jpg' },
+          { key: 'covers/cover3.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover3.jpg' },
+          { key: 'covers/cover4.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover4.jpg' },
+          { key: 'covers/cover5.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/covers/cover5.jpg' }
+        ];
+        coverPaths.forEach(item => {
+          const imgs = document.querySelectorAll(`img[src*="${item.key}"], img[alt="项目一图片${item.key.slice(-5, -4)}"]`);
+          imgs.forEach(img => img.src = item.url);
         });
 
-        // 3. 项目二：wechat_covers下的图片
-        const wechatImgs = {
-          ai: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/ai.jpg',
-          digital: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/digital.jpg',
-          industry: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/industry.jpg',
-          info: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/info.jpg',
-          report: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/report.jpg'
-        };
-        Object.keys(wechatImgs).forEach(key => {
-          const imgs = document.querySelectorAll(`img[src*="${key}"], img[alt*="${key}"]`);
-          imgs.forEach(img => img.src = wechatImgs[key]);
+        // 3. 项目二：仅匹配wechat_covers下的图片（严格路径匹配）
+        const wechatPaths = [
+          { key: 'wechat_covers/ai.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/ai.jpg' },
+          { key: 'wechat_covers/digital.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/digital.jpg' },
+          { key: 'wechat_covers/industry.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/industry.jpg' },
+          { key: 'wechat_covers/info.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/info.jpg' },
+          { key: 'wechat_covers/report.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/wechat_covers/report.jpg' }
+        ];
+        wechatPaths.forEach(item => {
+          const imgs = document.querySelectorAll(`img[src*="${item.key}"], img[alt="项目二图片${item.key.slice(-5, -4)}"]`);
+          imgs.forEach(img => img.src = item.url);
         });
 
-        // 4. 项目三：work3、项目四：work4
-        const workImgs = {
-          work3: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/work3.jpg',
-          work4: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/work4.jpg'
-        };
-        Object.keys(workImgs).forEach(key => {
-          const imgs = document.querySelectorAll(`img[src*="${key}"], img[alt*="${key}"]`);
-          imgs.forEach(img => img.src = workImgs[key]);
+        // 4. 项目三/四：仅匹配work3/work4（严格后缀匹配）
+        const workPaths = [
+          { key: 'work3.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/work3.jpg' },
+          { key: 'work4.jpg', url: 'https://raw.githubusercontent.com/wynne101099-cpu/wynne-lab/main/work4.jpg' }
+        ];
+        workPaths.forEach(item => {
+          const imgs = document.querySelectorAll(`img[src$="${item.key}"], img[alt="项目三图片"], img[alt="项目四图片"]`);
+          imgs.forEach(img => img.src = item.url);
         });
       };
     </script>
