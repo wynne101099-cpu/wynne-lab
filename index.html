@@ -7,21 +7,112 @@
 <script type="module" crossorigin src="/wynne-lab/assets/index-DKC5l-gS.js"></script>
 <link rel="stylesheet" crossorigin href="/wynne-lab/assets/index-CzizT7dk.css">
 
-<!-- 精准修复头像铺满圆形，不影响任何其他样式 -->
+<!-- 头像铺满样式（保留） -->
 <style>
-  /* 只作用于头像，确保在手机/电脑都铺满圆圈 */
+  [class*="avatar"], [id*="avatar"], img[src*="avatar"]:parent {
+    width: 200px !important;
+    height: 200px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    position: relative !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
   img[src*="avatar"] {
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
+    object-position: center !important;
+    border-radius: 50% !important;
     padding: 0 !important;
     margin: 0 !important;
-    border-radius: 50% !important;
     display: block !important;
+    border: none !important;
+  }
+  @media (max-width: 768px) {
+    [class*="avatar"], [id*="avatar"], img[src*="avatar"]:parent {
+      width: 150px !important;
+      height: 150px !important;
+    }
+  }
+  /* 加载占位：避免空白，提升体验 */
+  img {
+    background: #f5f5f5 url("https://cdn.jsdelivr.net/npm/placeholder.com/100x100") center no-repeat !important;
   }
 </style>
 
+<!-- 核心：图片预加载脚本（优先加载头像，再加载其他） -->
 <script>
+// 1. 定义图片地址（按优先级排序）
+const base = "https://wynne101099-cpu.github.io/wynne-lab";
+const imgUrls = {
+  // 高优先级：先加载头像
+  avatar: base + "/avatar.jpg?t=" + Date.now(),
+  // 中优先级：作品图片
+  cover1: base + "/covers/cover1.jpg?t=" + Date.now(),
+  cover2: base + "/covers/cover2.jpg?t=" + Date.now(),
+  cover3: base + "/covers/cover3.jpg?t=" + Date.now(),
+  cover4: base + "/covers/cover4.jpg?t=" + Date.now(),
+  cover5: base + "/covers/cover5.jpg?t=" + Date.now(),
+  ai: base + "/wechat_covers/ai.jpg?t=" + Date.now(),
+  digital: base + "/wechat_covers/digital.jpg?t=" + Date.now(),
+  industry: base + "/wechat_covers/industry.jpg?t=" + Date.now(),
+  info: base + "/wechat_covers/info.jpg?t=" + Date.now(),
+  report: base + "/wechat_covers/report.jpg?t=" + Date.now(),
+  work3: base + "/work3.jpg?t=" + Date.now(),
+  work4: base + "/work4.jpg?t=" + Date.now()
+};
+
+// 2. 预加载函数（先加载头像，再加载其他）
+function preloadImages() {
+  // 第一步：优先加载头像（最快显示核心内容）
+  const avatarImg = new Image();
+  avatarImg.src = imgUrls.avatar;
+  avatarImg.onload = function() {
+    document.querySelectorAll(`img[src*="avatar"]`).forEach(img => {
+      img.src = imgUrls.avatar;
+      img.style.background = "none !important";
+    });
+    // 头像加载完成后，再加载其他图片（不阻塞页面）
+    loadOtherImages();
+  };
+  // 头像加载失败重试
+  avatarImg.onerror = function() {
+    setTimeout(() => {
+      avatarImg.src = imgUrls.avatar;
+    }, 300);
+  };
+}
+
+// 3. 加载其他图片（异步，不卡页面）
+function loadOtherImages() {
+  const otherKeys = Object.keys(imgUrls).filter(key => key !== "avatar");
+  // 分批加载：每次加载2张，避免网络拥堵
+  let index = 0;
+  function loadBatch() {
+    if (index >= otherKeys.length) return;
+    const batch = otherKeys.slice(index, index + 2);
+    batch.forEach(key => {
+      const img = new Image();
+      img.src = imgUrls[key];
+      img.onload = function() {
+        document.querySelectorAll(`img[src*="${key}"]`).forEach(el => {
+          el.src = imgUrls[key];
+          el.style.background = "none !important";
+        });
+      };
+    });
+    index += 2;
+    // 间隔300ms加载下一批
+    setTimeout(loadBatch, 300);
+  }
+  loadBatch();
+}
+
+// 4. 页面一加载就开始预加载（不等待）
+window.addEventListener('DOMContentLoaded', preloadImages);
+
+// 5. 兼容旧脚本（保留）
 (function() {
   const remote = "/sdk/dev-monitor.js";
   const s = document.createElement('script');
@@ -34,33 +125,5 @@
 </head>
 <body>
 <div id="root"></div>
-
-<script>
-const base = "https://wynne101099-cpu.github.io/wynne-lab";
-
-const imgUrls = {
-  avatar: base + "/avatar.jpg",
-  cover1: base + "/covers/cover1.jpg",
-  cover2: base + "/covers/cover2.jpg",
-  cover3: base + "/covers/cover3.jpg",
-  cover4: base + "/covers/cover4.jpg",
-  cover5: base + "/covers/cover5.jpg",
-  ai: base + "/wechat_covers/ai.jpg",
-  digital: base + "/wechat_covers/digital.jpg",
-  industry: base + "/wechat_covers/industry.jpg",
-  info: base + "/wechat_covers/info.jpg",
-  report: base + "/wechat_covers/report.jpg",
-  work3: base + "/work3.jpg",
-  work4: base + "/work4.jpg"
-};
-
-setTimeout(() => {
-  for (const name in imgUrls) {
-    document.querySelectorAll(`img[src*="${name}"]`).forEach(img => {
-      img.src = imgUrls[name] + "?t=" + Date.now();
-    });
-  }
-}, 800);
-</script>
 </body>
 </html>
