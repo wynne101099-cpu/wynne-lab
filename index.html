@@ -4,8 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wynne's Ink Lab</title>
-    <!-- 核心添加：基础路径标签，修复所有图片/资源路径 -->
-    <base href="https://wynne101099-cpu.github.io/wynne-lab/" />
     <script type="module" crossorigin src="/wynne-lab/assets/index-DKC5l-gS.js"></script>
     <link rel="stylesheet" crossorigin href="/wynne-lab/assets/index-CzizT7dk.css">
   
@@ -17,7 +15,6 @@
         script.src = remote + separator + 't=' + Date.now();
         script.dataset.id = 'dev-inject-monitor-script';
         script.defer = true;
-        // 防止重复注入
         if (!document.querySelector('[data-id="dev-inject-monitor-script"]')) {
           document.head.appendChild(script);
         }
@@ -26,5 +23,37 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- 自动修复所有图片路径的脚本（核心！） -->
+    <script>
+      window.onload = function() {
+        // 修复头像图片
+        const avatarImg = document.querySelector('img[src*="avatar"], img[alt*="头像"], img[alt*="avatar"]');
+        if (avatarImg) {
+          avatarImg.src = 'https://wynne101099-cpu.github.io/wynne-lab/avatar.jpg';
+        }
+        // 修复work1-work5图片
+        const workImgs = document.querySelectorAll('img[src*="work1"], img[src*="work2"], img[src*="work3"], img[src*="work4"], img[src*="work5"]');
+        const workImgUrls = [
+          'https://wynne101099-cpu.github.io/wynne-lab/work1.jpg',
+          'https://wynne101099-cpu.github.io/wynne-lab/work2.jpg',
+          'https://wynne101099-cpu.github.io/wynne-lab/work3.jpg',
+          'https://wynne101099-cpu.github.io/wynne-lab/work4.jpg',
+          'https://wynne101099-cpu.github.io/wynne-lab/work5.jpg'
+        ];
+        workImgs.forEach((img, index) => {
+          if (workImgUrls[index]) {
+            img.src = workImgUrls[index];
+          }
+        });
+        // 修复所有其他图片（兜底）
+        const allImgs = document.querySelectorAll('img');
+        allImgs.forEach(img => {
+          if (!img.src.startsWith('http')) {
+            img.src = 'https://wynne101099-cpu.github.io/wynne-lab/' + img.src.split('/').pop();
+          }
+        });
+      };
+    </script>
   </body>
 </html>
