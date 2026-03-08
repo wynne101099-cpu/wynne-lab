@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wynne's Ink Lab</title>
+    <script type="module" crossorigin src="/wynne-lab/assets/index-DKC5l-gS.js"></script>
+    <link rel="stylesheet" crossorigin href="/wynne-lab/assets/index-CzizT7dk.css">
+  
+    <script data-id="dev-inject-monitor">
+      (function() {
+        const remote = "/sdk/dev-monitor.js";
+        const separator = remote.includes('?') ? '&' : '?';
+        const script = document.createElement('script');
+        script.src = remote + separator + 't=' + Date.now();
+        script.dataset.id = 'dev-inject-monitor-script';
+        script.defer = true;
+        // 防止重复注入
+        if (!document.querySelector('[data-id="dev-inject-monitor-script"]')) {
+          document.head.appendChild(script);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
